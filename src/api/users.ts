@@ -1,1 +1,22 @@
-export {}
+import { client } from './client'
+import type { Paginated } from '../types/api'
+import type { User, UserUpdate, UsersQuery } from '../types/user'
+
+export async function list(query: UsersQuery): Promise<Paginated<User>> {
+  const { data } = await client.get<Paginated<User>>('/users', { params: query })
+  return data
+}
+
+export async function get(id: number): Promise<User> {
+  const { data } = await client.get<User>(`/users/${id}`)
+  return data
+}
+
+export async function update(id: number, patch: UserUpdate): Promise<User> {
+  const { data } = await client.patch<User>(`/users/${id}`, patch)
+  return data
+}
+
+export async function remove(id: number): Promise<void> {
+  await client.delete<void>(`/users/${id}`)
+}

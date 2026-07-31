@@ -1,8 +1,8 @@
 import { HttpResponse, delay, http } from 'msw'
 import type { DefaultBodyType, PathParams } from 'msw'
 import type { ApiError, Paginated, SortOrder } from '../types/api'
-import type { AuthUser, LoginPayload, LoginResponse, Permission } from '../types/auth'
-import type { Role, User, UserUpdate } from '../types/user'
+import type { AuthResponse, AuthUser, Credentials, Permission } from '../types/auth'
+import type { Role, User, UserSortField, UserUpdate } from '../types/user'
 import {
   deleteUser,
   findUserById,
@@ -19,16 +19,14 @@ const LATENCY_MS = 200
 const DEFAULT_PAGE_SIZE = 10
 const MAX_PAGE_SIZE = 100
 
-type SortField = 'id' | 'name' | 'email' | 'role'
-
 type UserParams = {
   id: string
 }
 
-const SORT_FIELDS: SortField[] = ['id', 'name', 'email', 'role']
+const SORT_FIELDS: UserSortField[] = ['id', 'name', 'email', 'role']
 const ROLES: Role[] = ['admin', 'user']
 
-function isSortField(value: string | null): value is SortField {
+function isSortField(value: string | null): value is UserSortField {
   return SORT_FIELDS.some((field) => field === value)
 }
 
@@ -76,14 +74,14 @@ function badRequest(message: string): HttpResponse<ApiError> {
   return HttpResponse.json<ApiError>({ message }, { status: 400 })
 }
 
-function compare(left: User, right: User, field: SortField): number {
+function compare(left: User, right: User, field: UserSortField): number {
   if (field === 'id') {
     return left.id - right.id
   }
   return left[field].localeCompare(right[field])
 }
 
-const login = http.post<PathParams, LoginPayload, LoginResponse | ApiError>(
+const login = http.post<PathParams, Credentials, AuthResponse | ApiError>(
   '/auth/login',
   async ({ request }) => {
     await delay(LATENCY_MS)
@@ -97,7 +95,7 @@ const login = http.post<PathParams, LoginPayload, LoginResponse | ApiError>(
       return HttpResponse.json<ApiError>({ message: 'Invalid email or password' }, { status: 401 })
     }
 
-    return HttpResponse.json<LoginResponse>({
+    return HttpResponse.json<AuthResponse>({
       token: issueToken(user),
       user: toAuthUser(user),
     })
@@ -135,7 +133,7 @@ const listUsersRoute = http.get<PathParams, DefaultBodyType, Paginated<User> | A
     const search = (url.searchParams.get('search') ?? '').trim().toLowerCase()
     const roleFilter = url.searchParams.get('role')
     const sortParam = url.searchParams.get('sort')
-    const sort: SortField = isSortField(sortParam) ? sortParam : 'id'
+    const sort: UserSortField = isSortField(sortParam) ? sortParam : 'id'
     const order: SortOrder = url.searchParams.get('order') === 'desc' ? 'desc' : 'asc'
     const page = positiveInt(url.searchParams.get('page'), 1, Number.MAX_SAFE_INTEGER)
     const pageSize = positiveInt(url.searchParams.get('pageSize'), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)

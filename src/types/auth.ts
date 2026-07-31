@@ -6,12 +6,12 @@ export interface AuthUser extends User {
   permissions: Permission[]
 }
 
-export interface LoginPayload {
+export interface Credentials {
   email: string
   password: string
 }
 
-export interface LoginResponse {
+export interface AuthResponse {
   token: string
   user: AuthUser
 }
