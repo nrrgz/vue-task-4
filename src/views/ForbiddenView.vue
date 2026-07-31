@@ -1,5 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div />
+  <section>
+    <h1>403 Forbidden</h1>
+  </section>
 </template>
