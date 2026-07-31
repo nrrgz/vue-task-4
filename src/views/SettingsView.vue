@@ -1,22 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import BaseSelect from '../components/base/BaseSelect.vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
+import { usePreferencesStore } from '../stores/preferences'
+import type { TableDensity } from '../stores/preferences'
 
 const auth = useAuthStore()
 const notifications = useNotificationStore()
-
-const density = ref('comfortable')
+const preferences = usePreferencesStore()
 
 const densityOptions = [
   { label: 'Comfortable', value: 'comfortable' },
   { label: 'Compact', value: 'compact' },
 ]
 
-function handleSave(): void {
-  notifications.notify('success', 'Preferences saved')
-}
+const density = computed<string>({
+  get: () => preferences.density,
+  set: (value) => {
+    const next: TableDensity = value === 'compact' ? 'compact' : 'comfortable'
+    if (next === preferences.density) return
+
+    preferences.setDensity(next)
+    notifications.notify('success', 'Preferences saved')
+  },
+})
 </script>
 
 <template>
@@ -27,7 +35,10 @@ function handleSave(): void {
 
     <label class="settings__field">
       <span class="settings__label">Table density</span>
-      <BaseSelect v-model="density" :options="densityOptions" @change="handleSave" />
+      <BaseSelect v-model="density" :options="densityOptions" />
+      <span class="settings__help">
+        Controls row spacing on the users table. Saved to this browser.
+      </span>
     </label>
   </section>
 </template>
@@ -50,5 +61,10 @@ function handleSave(): void {
   font-size: 0.85rem;
   font-weight: 500;
   color: #374151;
+}
+
+.settings__help {
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 </style>

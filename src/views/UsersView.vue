@@ -4,15 +4,18 @@ import { apiErrorMessage, isReportedGlobally } from '../api/client'
 import * as usersApi from '../api/users'
 import BaseButton from '../components/base/BaseButton.vue'
 import BaseInput from '../components/base/BaseInput.vue'
+import BaseModal from '../components/base/BaseModal.vue'
 import BaseSelect from '../components/base/BaseSelect.vue'
 import BaseTable from '../components/base/BaseTable.vue'
 import SkeletonLoader from '../components/feedback/SkeletonLoader.vue'
 import { PAGE_SIZE_OPTIONS, useServerTable } from '../composables/useServerTable'
 import { useNotificationStore } from '../stores/notifications'
+import { usePreferencesStore } from '../stores/preferences'
 import type { SortOrder } from '../types/api'
 import type { User } from '../types/user'
 
 const notifications = useNotificationStore()
+const preferences = usePreferencesStore()
 
 const {
   state,
@@ -64,9 +67,31 @@ const rangeStart = computed(() => (state.value.page - 1) * state.value.pageSize 
 const rangeEnd = computed(() => Math.min(state.value.page * state.value.pageSize, total.value))
 
 const deletingId = ref<number | null>(null)
+const confirmTarget = ref<User | null>(null)
+
+const densityClass = computed(() => `users__table--${preferences.density}`)
+
+const confirmOpen = computed({
+  get: () => confirmTarget.value !== null,
+  set: (open: boolean) => {
+    if (!open) confirmTarget.value = null
+  },
+})
 
 function handleSort(value: { key: string | null; order: SortOrder }): void {
   setSort(value.key, value.order)
+}
+
+function requestDelete(user: User): void {
+  confirmTarget.value = user
+}
+
+async function confirmDelete(): Promise<void> {
+  const user = confirmTarget.value
+  if (user === null) return
+
+  confirmTarget.value = null
+  await handleDelete(user)
 }
 
 async function handleDelete(user: User): Promise<void> {
@@ -116,6 +141,7 @@ async function handleDelete(user: User): Promise<void> {
 
     <template v-else>
       <BaseTable
+        :class="densityClass"
         :columns="columns"
         :rows="rows"
         row-key="id"
@@ -131,7 +157,7 @@ async function handleDelete(user: User): Promise<void> {
               v-can="'delete_user'"
               variant="danger"
               :loading="deletingId === row.id"
-              @click="handleDelete(row)"
+              @click="requestDelete(row)"
             >
               Delete
             </BaseButton>
@@ -179,6 +205,20 @@ async function handleDelete(user: User): Promise<void> {
         </label>
       </div>
     </template>
+
+    <BaseModal v-model="confirmOpen">
+      <template #header>Delete user</template>
+
+      <p class="users__confirm">
+        Permanently delete <strong>{{ confirmTarget?.name }}</strong> ({{ confirmTarget?.email }})?
+        This cannot be undone.
+      </p>
+
+      <template #footer>
+        <BaseButton variant="secondary" @click="confirmOpen = false">Cancel</BaseButton>
+        <BaseButton variant="danger" @click="confirmDelete">Delete</BaseButton>
+      </template>
+    </BaseModal>
   </section>
 </template>
 
@@ -217,6 +257,16 @@ async function handleDelete(user: User): Promise<void> {
   border-radius: 8px;
   background-color: #fee2e2;
   color: #7f1d1d;
+}
+
+.users__table--compact :deep(th),
+.users__table--compact :deep(td) {
+  padding: 0.3rem 0.5rem;
+}
+
+.users__confirm {
+  margin: 0;
+  color: #374151;
 }
 
 .users__actions {

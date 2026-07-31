@@ -23,25 +23,71 @@ No backend needed — MSW intercepts requests in the browser.
 
 The other 48 seeded users share the password `password123`.
 
-## Decisions & tradeoffs
+## Design decisions & tradeoffs
 
-- **Permissions come from the backend.** The login response carries `permissions[]`; the frontend
-  never maps role to permissions itself.
-- **Roles gate routes, permissions gate actions.** `meta.roles` protects pages, `v-can` protects
-  controls.
-- **Synchronous session hydration.** The auth store is restored from `localStorage` before the
-  router's first navigation, so a refresh isn't bounced to `/login`. Revalidating via `GET /me` on
-  boot would be more production-realistic but needs an async guard.
-- **`v-can` is cosmetic.** Real authorization is the backend returning 403, caught by the response
-  interceptor — hiding a control only removes the temptation. Two caveats: it runs in `mounted`, so
-  a denied element exists for one frame before it is replaced by a comment anchor; and directives
-  don't re-run on reactive change, so permissions gained or lost after mount need a remount.
-- **Tokens live only in the axios interceptor and the auth store**, never in components.
-- **Mock data is in-memory**, so edits and deletes reset on reload. The seed is deterministic.
-- **The mock token is base64, not stored server-side**, so it still resolves after the worker
-  restarts — otherwise every refresh would log you out.
-- **`public/mockServiceWorker.js` is generated but committed** (`npx msw init public/ --save`).
-  Without it a fresh clone has no mock backend.
+**Permissions come from the backend.** The login response carries `permissions[]` alongside the
+user, and the frontend never maps a role to permissions itself. The role→permission table lives
+only in `src/mocks/db.ts`, which stands in for the server. Adding a permission to a role is a
+backend change; the UI picks it up with no edit.
+
+**Session hydration is synchronous.** `main.ts` calls `authStore.hydrate()` — a plain
+`localStorage` read — after Pinia is installed but before `app.use(router)` and `app.mount()`. The
+store is therefore populated before the router's first navigation, so a refresh on a protected
+route is not bounced to `/login`.
+
+The production-realistic alternative is to revalidate the token via `GET /me` on boot. That is
+strictly more correct — it detects a token revoked server-side, which the sync path cannot — but it
+forces the navigation guard to become async and reintroduces the ordering race the sync read
+avoids: the guard must either await an in-flight request or run against an empty store. Given a
+mock backend that cannot revoke tokens anyway, the added failure surface bought nothing, so the
+tradeoff is: **a revoked token stays trusted until its next request 401s**, at which point the
+response interceptor logs out and redirects.
+
+**Roles gate routes; permissions gate actions.** `meta: { roles: ['admin'] }` decides which pages
+exist for you and is enforced in one `beforeEach`. `v-can="'delete_user'"` decides which controls
+render. The two never mix — no role check inside a button, no permission check in a guard. Role is
+coarse and stable, permission is fine-grained, and a role gaining a permission should not require
+touching a route.
+
+**`v-can` has two caveats, both deliberate.**
+
+1. _It is cosmetic._ The directive only hides a control. Real authorization is the backend
+   returning 403, caught by the response interceptor, which surfaces a toast. Hiding the delete
+   button removes the temptation, not the capability — the API rejects the call regardless. Because
+   it runs in `mounted`, a denied element also exists for one frame before it is replaced by a
+   comment anchor.
+2. _It is not reactive._ Directives do not re-run when reactive state changes, so permissions
+   gained or lost after mount are not reflected until the element remounts. This is fine here
+   because permissions only change at login/logout, which remounts the tree anyway.
+
+**The URL is the single source of truth for table state.** Page, size, sort, order, search and role
+filter live in `route.query`; UI actions push a new query and a watcher fetches from it. No
+component keeps a parallel copy, so a pasted URL restores the exact table. Search uses `replace`
+and a 350 ms debounce to avoid flooding history.
+
+**Base components were reused unmodified.** `src/components/base/` is byte-identical to Task 3.
+`BaseTable` needed a controlled-sorting mode for server-side sort; rather than patch the copy here,
+it was fixed at the source in Task 3 and re-copied, so this project's components are genuinely
+unedited. `src/components/base` is in `.prettierignore` for the same reason.
+
+**Known tradeoffs.** Mock data is in-memory, so edits and deletes reset on reload; the seed is
+deterministic. The mock backend does not stop you deleting your own account — doing so logs you
+out on the next request, because the token no longer resolves to a user. A real backend would
+reject that with a 409. The mock token is base64, not stored server-side, so it still resolves after the
+service worker restarts — otherwise every refresh would log you out.
+`public/mockServiceWorker.js` is generated (`npx msw init public/ --save`) but committed, since a
+fresh clone has no mock backend without it.
+
+## Definition of done
+
+- [x] Admin login → every page reachable, delete buttons visible
+- [x] Regular user → typing `/users` manually → redirected to `/403`; no delete buttons anywhere
+- [x] Logged out → open `/dashboard` → sent to `/login` → after login, returned to `/dashboard`
+- [x] F5 refresh keeps the session
+- [x] Clicking a table column header fires the correct request (visible in the Network tab)
+- [x] No console warnings or errors anywhere
+- [x] `vue-tsc --noEmit` passes; `eslint .` passes
+- [x] README documents run steps, decisions, and known tradeoffs
 
 ## Structure
 
@@ -52,7 +98,7 @@ src/
   composables/   useServerTable (URL <-> query <-> fetch)
   directives/    can.ts (v-can)
   router/        routes + guards
-  stores/        auth, notifications
+  stores/        auth, notifications, preferences
   views/         login, dashboard, users, user edit, settings, 403, 404
   mocks/         MSW handlers + seed data
 ```
