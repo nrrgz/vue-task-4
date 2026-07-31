@@ -28,11 +28,12 @@ const fields: FieldConfig[] = [
       { label: 'User', value: 'user' },
     ],
   },
+  { type: 'checkbox', name: 'active', label: 'Active' },
 ]
 
 const userId = computed(() => Number.parseInt(String(route.params.id), 10))
 
-const model = ref<FormModel>({ name: '', email: '', role: 'user' })
+const model = ref<FormModel>({ name: '', email: '', role: 'user', active: true })
 const initial = ref<FormModel | null>(null)
 const loading = ref(false)
 const saving = ref(false)
@@ -49,8 +50,12 @@ function text(value: FieldValue | undefined): string {
   return typeof value === 'string' ? value : ''
 }
 
+function flag(value: FieldValue | undefined): boolean {
+  return value === true
+}
+
 function toModel(user: User): FormModel {
-  return { name: user.name, email: user.email, role: user.role }
+  return { name: user.name, email: user.email, role: user.role, active: user.active }
 }
 
 async function load(): Promise<void> {
@@ -78,6 +83,7 @@ async function handleSubmit(): Promise<void> {
       name: text(model.value.name),
       email: text(model.value.email),
       role,
+      active: flag(model.value.active),
     })
 
     model.value = toModel(updated)

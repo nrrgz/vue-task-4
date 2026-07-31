@@ -207,6 +207,9 @@ const patchUser = http.patch<UserParams, UserUpdate, User | ApiError>(
     if (body.email !== undefined && !body.email.includes('@')) {
       return badRequest('Email is not valid')
     }
+    if (body.active !== undefined && typeof body.active !== 'boolean') {
+      return badRequest('Active must be true or false')
+    }
 
     const updated = updateUser(Number.parseInt(params.id, 10), body)
     return updated ? HttpResponse.json<User>(updated) : notFound()

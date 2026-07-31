@@ -74,6 +74,7 @@ function seed(): User[] {
     name: account.name,
     email: account.email,
     role: account.role,
+    active: true,
   }))
 
   for (let index = seeded.length; index < SEED_SIZE; index += 1) {
@@ -87,6 +88,7 @@ function seed(): User[] {
       name: `${first} ${last}`,
       email: `${first}.${last}${id}@example.com`.toLowerCase(),
       role: id % 5 === 0 ? 'admin' : 'user',
+      active: id % 7 !== 0,
     })
   }
 
@@ -136,6 +138,9 @@ export function updateUser(id: number, changes: UserUpdate): User | undefined {
   }
   if (changes.role !== undefined) {
     user.role = changes.role
+  }
+  if (changes.active !== undefined) {
+    user.active = changes.active
   }
   return user
 }
