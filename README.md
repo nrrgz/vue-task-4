@@ -22,7 +22,11 @@ No backend is required — MSW intercepts requests in the browser.
 | Admin | admin@example.com | admin    | View/edit/delete users, view settings |
 | User  | user@example.com  | user     | View settings only                    |
 
-_(These are seeded in `src/mocks/db.ts`.)_
+These two are the `TEST_ACCOUNTS` export in `src/mocks/db.ts`. The other 48 seeded users are
+generated and all share the password `password123` (`GENERATED_ACCOUNT_PASSWORD`).
+
+The role→permission map is defined in `src/mocks/db.ts` and is backend-side only — the frontend
+reads `permissions[]` off the login response and never derives it from the role.
 
 ## What it does
 
@@ -49,6 +53,15 @@ _(These are seeded in `src/mocks/db.ts`.)_
   authorization is enforced by the backend returning 403 (handled by the axios interceptor).
   It also does not react to role changes at runtime.
 - **Tokens live only in the axios interceptor and the auth store** — never in components.
+- **The mock token is decodable, not stored server-side.** It is `mock-jwt.` plus a base64 payload
+  holding the user id, so the mock backend can resolve a token it never saw before. An in-memory
+  token registry would be lost every time the worker restarts, which would break session-survives-
+  refresh on the very first F5. It is obviously not a real signed JWT and verifies nothing.
+- **Mock data is in-memory.** `PATCH` and `DELETE` mutate the seeded array, so edits and deletions
+  reset on a full page reload. The seed itself is deterministic — same 50 users every boot.
+- **The mock backend enforces permissions, not just `DELETE`.** `GET /users` requires `view_users`,
+  `PATCH` requires `edit_user`, and `DELETE` requires `delete_user`; all of them 401 without a
+  valid token. This is what makes `v-can` cosmetic rather than load-bearing.
 - **The MSW worker script is generated but committed.** `public/mockServiceWorker.js` is produced
   by `npx msw init public/ --save`, not hand-written — do not edit it, and regenerate it with that
   command after upgrading `msw`. It is committed deliberately: MSW registers it as a real service
