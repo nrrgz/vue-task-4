@@ -9,11 +9,13 @@ import BaseSelect from '../components/base/BaseSelect.vue'
 import BaseTable from '../components/base/BaseTable.vue'
 import SkeletonLoader from '../components/feedback/SkeletonLoader.vue'
 import { PAGE_SIZE_OPTIONS, useServerTable } from '../composables/useServerTable'
+import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import { usePreferencesStore } from '../stores/preferences'
 import type { SortOrder } from '../types/api'
 import type { User } from '../types/user'
 
+const auth = useAuthStore()
 const notifications = useNotificationStore()
 const preferences = usePreferencesStore()
 
@@ -80,6 +82,10 @@ const confirmOpen = computed({
 
 function handleSort(value: { key: string | null; order: SortOrder }): void {
   setSort(value.key, value.order)
+}
+
+function isSelf(user: User): boolean {
+  return user.id === auth.user?.id
 }
 
 function requestDelete(user: User): void {
@@ -157,6 +163,10 @@ async function handleDelete(user: User): Promise<void> {
               v-can="'delete_user'"
               variant="danger"
               :loading="deletingId === row.id"
+              :disabled="isSelf(row)"
+              :title="
+                isSelf(row) ? 'You cannot delete the account you are signed in as' : undefined
+              "
               @click="requestDelete(row)"
             >
               Delete

@@ -74,6 +74,10 @@ function badRequest(message: string): HttpResponse<ApiError> {
   return HttpResponse.json<ApiError>({ message }, { status: 400 })
 }
 
+function conflict(message: string): HttpResponse<ApiError> {
+  return HttpResponse.json<ApiError>({ message }, { status: 409 })
+}
+
 function compare(left: User, right: User, field: UserSortField): number {
   if (field === 'id') {
     return left.id - right.id
@@ -222,9 +226,12 @@ const removeUser = http.delete<UserParams, DefaultBodyType, ApiError | null>(
       return forbidden('delete_user')
     }
 
-    return deleteUser(Number.parseInt(params.id, 10))
-      ? new HttpResponse(null, { status: 204 })
-      : notFound()
+    const targetId = Number.parseInt(params.id, 10)
+    if (targetId === caller.id) {
+      return conflict('You cannot delete the account you are signed in as')
+    }
+
+    return deleteUser(targetId) ? new HttpResponse(null, { status: 204 }) : notFound()
   },
 )
 

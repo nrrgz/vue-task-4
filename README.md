@@ -71,9 +71,8 @@ it was fixed at the source in Task 3 and re-copied, so this project's components
 unedited. `src/components/base` is in `.prettierignore` for the same reason.
 
 **Known tradeoffs.** Mock data is in-memory, so edits and deletes reset on reload; the seed is
-deterministic. The mock backend does not stop you deleting your own account — doing so logs you
-out on the next request, because the token no longer resolves to a user. A real backend would
-reject that with a 409. The mock token is base64, not stored server-side, so it still resolves after the
+deterministic. Deleting the account you are signed in as is rejected with a 409, since otherwise
+the token stops resolving to a user and the next request logs you out mid-session. The mock token is base64, not stored server-side, so it still resolves after the
 service worker restarts — otherwise every refresh would log you out.
 `public/mockServiceWorker.js` is generated (`npx msw init public/ --save`) but committed, since a
 fresh clone has no mock backend without it.
