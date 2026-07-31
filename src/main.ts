@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import './style.css'
 import App from './App.vue'
+import { useAuthStore } from './stores/auth'
 
 async function startMockBackend(): Promise<void> {
   if (!import.meta.env.DEV) {
@@ -16,7 +18,13 @@ async function startMockBackend(): Promise<void> {
 
 async function bootstrap(): Promise<void> {
   await startMockBackend()
-  createApp(App).mount('#app')
+
+  const app = createApp(App)
+  app.use(createPinia())
+
+  useAuthStore().hydrate()
+
+  app.mount('#app')
 }
 
 void bootstrap()
