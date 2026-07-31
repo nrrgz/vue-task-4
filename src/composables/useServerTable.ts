@@ -99,7 +99,6 @@ export function useServerTable() {
 
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / state.value.pageSize)))
   const isFiltered = computed(() => state.value.search !== '' || state.value.role !== null)
-  const isEmpty = computed(() => !loading.value && error.value === null && total.value === 0)
   const isPageOutOfRange = computed(
     () => !loading.value && error.value === null && total.value > 0 && rows.value.length === 0,
   )
@@ -184,7 +183,6 @@ export function useServerTable() {
     totalPages,
     loading,
     error,
-    isEmpty,
     isFiltered,
     isPageOutOfRange,
     searchInput,
