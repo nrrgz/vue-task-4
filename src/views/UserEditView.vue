@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import { apiErrorMessage } from '../api/client'
+import { apiErrorMessage, isReportedGlobally } from '../api/client'
 import * as usersApi from '../api/users'
 import BaseButton from '../components/base/BaseButton.vue'
 import BaseModal from '../components/base/BaseModal.vue'
@@ -84,7 +84,9 @@ async function handleSubmit(): Promise<void> {
     initial.value = toModel(updated)
     notifications.notify('success', `Saved ${updated.name}`)
   } catch (cause) {
-    notifications.notify('error', apiErrorMessage(cause))
+    if (!isReportedGlobally(cause)) {
+      notifications.notify('error', apiErrorMessage(cause))
+    }
   } finally {
     saving.value = false
   }
