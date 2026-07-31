@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './style.css'
 import App from './App.vue'
+import { can } from './directives/can'
 import { router } from './router'
 import { useAuthStore } from './stores/auth'
 
@@ -25,6 +26,7 @@ async function bootstrap(): Promise<void> {
 
   useAuthStore().hydrate()
 
+  app.directive('can', can)
   app.use(router)
   await router.isReady()
 

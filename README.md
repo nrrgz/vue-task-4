@@ -32,8 +32,10 @@ The other 48 seeded users share the password `password123`.
 - **Synchronous session hydration.** The auth store is restored from `localStorage` before the
   router's first navigation, so a refresh isn't bounced to `/login`. Revalidating via `GET /me` on
   boot would be more production-realistic but needs an async guard.
-- **`v-can` is cosmetic.** Real authorization is the backend returning 403. It also doesn't react to
-  role changes at runtime.
+- **`v-can` is cosmetic.** Real authorization is the backend returning 403, caught by the response
+  interceptor — hiding a control only removes the temptation. Two caveats: it runs in `mounted`, so
+  a denied element exists for one frame before it is replaced by a comment anchor; and directives
+  don't re-run on reactive change, so permissions gained or lost after mount need a remount.
 - **Tokens live only in the axios interceptor and the auth store**, never in components.
 - **Mock data is in-memory**, so edits and deletes reset on reload. The seed is deterministic.
 - **The mock token is base64, not stored server-side**, so it still resolves after the worker
