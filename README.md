@@ -11,16 +11,18 @@ npm install
 npm run dev
 ```
 
-Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`.
+Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`, `npm run format`.
+
+No backend is required — MSW intercepts requests in the browser.
 
 ## Test accounts
 
-| Role  | Email             | Password | Can                                    |
-|-------|-------------------|----------|----------------------------------------|
-| Admin | admin@example.com | admin    | View/edit/delete users, view settings  |
-| User  | user@example.com  | user     | View settings only                     |
+| Role  | Email             | Password | Can                                   |
+| ----- | ----------------- | -------- | ------------------------------------- |
+| Admin | admin@example.com | admin    | View/edit/delete users, view settings |
+| User  | user@example.com  | user     | View settings only                    |
 
-*(These are seeded in `src/mocks/db.ts`.)*
+_(These are seeded in `src/mocks/db.ts`.)_
 
 ## What it does
 
@@ -47,6 +49,12 @@ Other scripts: `npm run build`, `npm run lint`, `npm run typecheck`.
   authorization is enforced by the backend returning 403 (handled by the axios interceptor).
   It also does not react to role changes at runtime.
 - **Tokens live only in the axios interceptor and the auth store** — never in components.
+- **The MSW worker script is generated but committed.** `public/mockServiceWorker.js` is produced
+  by `npx msw init public/ --save`, not hand-written — do not edit it, and regenerate it with that
+  command after upgrading `msw`. It is committed deliberately: MSW registers it as a real service
+  worker, so without it in the repo a fresh clone has no mock backend and nothing in the app works.
+  The tradeoff is a generated file in version control, which shows up as noise in `msw` upgrade
+  diffs.
 
 ## Structure
 
