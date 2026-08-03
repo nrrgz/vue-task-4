@@ -8,12 +8,12 @@ interface SeedAccount {
   role: Role
 }
 
-export const TEST_ACCOUNTS: SeedAccount[] = [
+const TEST_ACCOUNTS: SeedAccount[] = [
   { name: 'Amelia Hart', email: 'admin@example.com', password: 'admin', role: 'admin' },
   { name: 'Noah Brennan', email: 'user@example.com', password: 'user', role: 'user' },
 ]
 
-export const GENERATED_ACCOUNT_PASSWORD = 'password123'
+const GENERATED_ACCOUNT_PASSWORD = 'password123'
 
 const SEED_SIZE = 50
 
@@ -116,7 +116,7 @@ export function findUserById(id: number): User | undefined {
   return users.find((user) => user.id === id)
 }
 
-export function findUserByEmail(email: string): User | undefined {
+function findUserByEmail(email: string): User | undefined {
   const normalised = email.trim().toLowerCase()
   return users.find((user) => user.email.toLowerCase() === normalised)
 }
@@ -161,7 +161,7 @@ export function deleteUser(id: number): boolean {
   return false
 }
 
-export function permissionsFor(role: Role): Permission[] {
+function permissionsFor(role: Role): Permission[] {
   return [...ROLE_PERMISSIONS[role]]
 }
 
