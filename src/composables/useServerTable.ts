@@ -1,7 +1,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { LocationQuery, LocationQueryRaw, LocationQueryValue } from 'vue-router'
-import { apiErrorMessage } from '../api/client'
+import { apiErrorMessage } from '../api/errors'
 import * as usersApi from '../api/users'
 import type { SortOrder } from '../types/api'
 import type { Role, User, UserSortField, UsersQuery } from '../types/user'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { apiErrorMessage, isReportedGlobally } from '../api/client'
+import { apiErrorMessage } from '../api/errors'
 import * as usersApi from '../api/users'
 import BaseButton from '../components/base/BaseButton.vue'
 import BaseInput from '../components/base/BaseInput.vue'
@@ -114,9 +114,7 @@ async function handleDelete(user: User): Promise<void> {
 
     await refresh()
   } catch (cause) {
-    if (!isReportedGlobally(cause)) {
-      notifications.notify('error', apiErrorMessage(cause))
-    }
+    notifications.notify('error', apiErrorMessage(cause))
   } finally {
     deletingId.value = null
   }

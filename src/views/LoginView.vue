@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { apiErrorMessage } from '../api/client'
+import { apiErrorMessage } from '../api/errors'
 import BaseButton from '../components/base/BaseButton.vue'
 import BaseInput from '../components/base/BaseInput.vue'
 import { useAuthStore } from '../stores/auth'

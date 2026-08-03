@@ -1,20 +1,10 @@
 import axios from 'axios'
-import type { InternalAxiosRequestConfig } from 'axios'
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useNotificationStore } from '../stores/notifications'
-import type { ApiError } from '../types/api'
+import { FORBIDDEN_ERROR, SESSION_ERROR, apiErrorMessage } from './errors'
 
 const LOGIN_PATH = '/auth/login'
-const GENERIC_ERROR = 'Something went wrong. Please try again.'
-const FORBIDDEN_ERROR = 'You do not have permission to do that.'
-const SESSION_ERROR = 'Your session has expired. Please sign in again.'
-
-export function apiErrorMessage(cause: unknown): string {
-  if (axios.isAxiosError<ApiError>(cause)) {
-    return cause.response?.data?.message ?? GENERIC_ERROR
-  }
-
-  return GENERIC_ERROR
-}
+const SERVER_ERROR_STATUS = 500
 
 export const client = axios.create({
   baseURL: '/',
@@ -36,12 +26,12 @@ function isLoginRequest(config: InternalAxiosRequestConfig | undefined): boolean
   return config?.url?.includes(LOGIN_PATH) ?? false
 }
 
-export function isReportedGlobally(cause: unknown): boolean {
-  if (!axios.isAxiosError(cause) || isLoginRequest(cause.config)) {
-    return false
-  }
+function isUserRelevant(status: number | undefined): boolean {
+  return status === undefined || status === 403 || status >= SERVER_ERROR_STATUS
+}
 
-  return cause.response?.status === 401 || cause.response?.status === 403
+function defaultMessage(error: AxiosError, status: number | undefined): string {
+  return status === 403 ? FORBIDDEN_ERROR : apiErrorMessage(error)
 }
 
 client.interceptors.request.use((config) => {
@@ -62,14 +52,17 @@ client.interceptors.response.use(
     }
 
     const status = error.response?.status
+    const notifications = useNotificationStore()
 
     if (status === 401 && !isLoginRequest(error.config)) {
-      useNotificationStore().notify('error', SESSION_ERROR)
+      notifications.notify('error', SESSION_ERROR)
       handleUnauthorized?.()
+
+      return Promise.reject(error)
     }
 
-    if (status === 403) {
-      useNotificationStore().notify('error', FORBIDDEN_ERROR)
+    if (error.config?.handledLocally !== true && isUserRelevant(status)) {
+      notifications.notify('error', defaultMessage(error, status))
     }
 
     return Promise.reject(error)
