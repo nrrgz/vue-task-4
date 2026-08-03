@@ -5,14 +5,14 @@ export interface FieldOption {
   value: string
 }
 
-export interface FieldConfig {
+export type FieldValue = string | boolean
+
+export type FormModel = Record<string, FieldValue>
+
+export interface FieldConfig<T extends FormModel = FormModel> {
   type: FieldType
-  name: string
+  name: Extract<keyof T, string>
   label: string
   required?: boolean
   options?: FieldOption[]
 }
-
-export type FieldValue = string | boolean
-
-export type FormModel = Record<string, FieldValue>

@@ -9,15 +9,22 @@ import SkeletonLoader from '../components/feedback/SkeletonLoader.vue'
 import DynamicForm from '../components/form/DynamicForm.vue'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
-import type { FieldConfig, FieldValue, FormModel } from '../types/form'
+import type { FieldConfig } from '../types/form'
 import type { Role, User } from '../types/user'
+
+type UserForm = {
+  name: string
+  email: string
+  role: Role
+  active: boolean
+}
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const notifications = useNotificationStore()
 
-const fields: FieldConfig[] = [
+const fields: FieldConfig<UserForm>[] = [
   { type: 'text', name: 'name', label: 'Name', required: true },
   { type: 'text', name: 'email', label: 'Email', required: true },
   {
@@ -35,8 +42,8 @@ const fields: FieldConfig[] = [
 
 const userId = computed(() => Number.parseInt(String(route.params.id), 10))
 
-const model = ref<FormModel>({ name: '', email: '', role: 'user', active: true })
-const initial = ref<FormModel | null>(null)
+const model = ref<UserForm>({ name: '', email: '', role: 'user', active: true })
+const initial = ref<UserForm | null>(null)
 const loading = ref(false)
 const saving = ref(false)
 const error = ref<string | null>(null)
@@ -48,15 +55,7 @@ const isDirty = computed(() => {
   return fields.some((field) => model.value[field.name] !== base[field.name])
 })
 
-function text(value: FieldValue | undefined): string {
-  return typeof value === 'string' ? value : ''
-}
-
-function flag(value: FieldValue | undefined): boolean {
-  return value === true
-}
-
-function toModel(user: User): FormModel {
+function toModel(user: User): UserForm {
   return { name: user.name, email: user.email, role: user.role, active: user.active }
 }
 
@@ -80,12 +79,11 @@ async function handleSubmit(): Promise<void> {
   saving.value = true
 
   try {
-    const role: Role = text(model.value.role) === 'admin' ? 'admin' : 'user'
     const updated = await usersApi.update(userId.value, {
-      name: text(model.value.name),
-      email: text(model.value.email),
-      role,
-      active: flag(model.value.active),
+      name: model.value.name,
+      email: model.value.email,
+      role: model.value.role,
+      active: model.value.active,
     })
 
     model.value = toModel(updated)

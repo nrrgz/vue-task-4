@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends FormModel">
 import { provide, ref, toRef } from 'vue'
 import type { Component } from 'vue'
 import { FORM_CONTEXT } from './context'
@@ -8,13 +8,13 @@ import TextField from './fields/TextField.vue'
 import type { FieldConfig, FieldType, FieldValue, FormModel } from '../../types/form'
 
 interface Props {
-  fields: FieldConfig[]
+  fields: FieldConfig<T>[]
   disabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), { disabled: false })
 
-const model = defineModel<FormModel>({ required: true })
+const model = defineModel<T>({ required: true })
 
 const emit = defineEmits<{ submit: [] }>()
 
@@ -32,7 +32,7 @@ const errors = ref<Record<string, string>>({})
 
 provide(FORM_CONTEXT, { errors, disabled: toRef(props, 'disabled') })
 
-function setValue(name: string, value: FieldValue): void {
+function setValue(name: Extract<keyof T, string>, value: FieldValue): void {
   model.value = { ...model.value, [name]: value }
 
   if (errors.value[name] !== undefined) {
@@ -42,7 +42,7 @@ function setValue(name: string, value: FieldValue): void {
   }
 }
 
-function isMissing(field: FieldConfig): boolean {
+function isMissing(field: FieldConfig<T>): boolean {
   const value = model.value[field.name]
   return typeof value === 'string' ? value.trim() === '' : value !== true
 }
