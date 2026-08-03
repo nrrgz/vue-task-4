@@ -141,9 +141,7 @@ watch(userId, load, { immediate: true })
       <div>
         <RouterLink class="user-edit__back" :to="{ name: 'users' }">Back to users</RouterLink>
         <h1>Edit user</h1>
-        <p class="page__subtitle">
-          Every control below is rendered from a field config, not hand-written markup.
-        </p>
+        <p class="page__subtitle">Update this user's details.</p>
       </div>
     </div>
 

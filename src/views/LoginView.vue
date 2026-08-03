@@ -57,7 +57,7 @@ async function handleSubmit(): Promise<void> {
 
       <div class="login__heading">
         <h1>Sign in</h1>
-        <p class="login__subtitle">Enter your credentials to open the admin panel.</p>
+        <p class="login__subtitle">Enter your credentials to continue.</p>
       </div>
 
       <form class="login__form" @submit.prevent="handleSubmit">
