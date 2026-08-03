@@ -69,7 +69,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function refresh(): Promise<void> {
+    const requested = token.value
     const current = await authApi.me()
+
+    if (token.value !== requested) {
+      return
+    }
 
     user.value = current
     localStorage.setItem(USER_KEY, JSON.stringify(current))

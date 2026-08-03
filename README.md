@@ -42,6 +42,11 @@ and re-syncing the cached user with the backend. Without it, editing your own ac
 stale name in the header after a reload, because the mock database re-seeds and `localStorage` does
 not. A transport failure keeps the cached session; a 401 logs out via the response interceptor.
 
+That boot call swallows its own rejection on purpose — revalidation is best-effort, so a failed
+`GET /me` is silent and the session simply continues from the persisted data. It also captures the
+token before awaiting and discards the response if the token changed meanwhile, so logging out (or
+signing in as someone else) mid-request cannot resurrect the previous user or re-persist them.
+
 **Roles gate routes; permissions gate actions.** `meta: { roles: ['admin'] }` decides which pages
 exist for you and is enforced in one `beforeEach`. `v-can="'delete_user'"` decides which controls
 render. The two never mix — no role check inside a button, no permission check in a guard. Role is
