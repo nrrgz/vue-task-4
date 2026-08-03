@@ -41,6 +41,7 @@ const columns = [
   { key: 'name', label: 'Name', sortable: true },
   { key: 'email', label: 'Email', sortable: true },
   { key: 'role', label: 'Role', sortable: true },
+  { key: 'active', label: 'Status' },
   { key: 'actions', label: 'Actions', hideLabel: true },
 ]
 
@@ -124,10 +125,17 @@ async function handleDelete(user: User): Promise<void> {
 </script>
 
 <template>
-  <section class="users">
-    <h1>Users</h1>
+  <section class="page">
+    <div class="page__header">
+      <div>
+        <h1>Users</h1>
+        <p class="page__subtitle">
+          Search, sort and filter the directory. Every query runs on the server.
+        </p>
+      </div>
+    </div>
 
-    <div class="users__controls">
+    <div class="card users__toolbar">
       <div class="users__search">
         <BaseInput v-model="searchInput" label="Search" type="search" placeholder="Name or email" />
       </div>
@@ -139,55 +147,95 @@ async function handleDelete(user: User): Promise<void> {
     </div>
 
     <p v-if="error" class="users__error" role="alert">
-      {{ error }}
+      <span>{{ error }}</span>
       <BaseButton variant="secondary" @click="refresh">Retry</BaseButton>
     </p>
 
-    <SkeletonLoader v-else-if="loading" :rows="state.pageSize" />
+    <div v-else-if="loading" class="card users__loading">
+      <SkeletonLoader :rows="state.pageSize" />
+    </div>
 
-    <template v-else>
-      <BaseTable
-        :class="densityClass"
-        :columns="columns"
-        :rows="rows"
-        row-key="id"
-        :sort-key="state.sort"
-        :sort-order="state.order"
-        @update:sort="handleSort"
-      >
-        <template #cell-actions="{ row }">
-          <div class="users__actions">
-            <RouterLink :to="{ name: 'user-edit', params: { id: row.id } }">Edit</RouterLink>
-
-            <BaseButton
-              v-can="'delete_user'"
-              variant="danger"
-              :loading="deletingId === row.id"
-              :disabled="isSelf(row)"
-              :title="
-                isSelf(row) ? 'You cannot delete the account you are signed in as' : undefined
-              "
-              @click="requestDelete(row)"
-            >
-              Delete
-            </BaseButton>
-          </div>
-        </template>
-
-        <template #empty>
-          <template v-if="isPageOutOfRange">
-            Page {{ state.page }} is past the end of the results.
-            <BaseButton variant="secondary" @click="setPage(1)">Back to first page</BaseButton>
+    <div v-else class="card users__panel">
+      <div class="users__scroll">
+        <BaseTable
+          class="users__table"
+          :class="densityClass"
+          :columns="columns"
+          :rows="rows"
+          row-key="id"
+          :sort-key="state.sort"
+          :sort-order="state.order"
+          @update:sort="handleSort"
+        >
+          <template #cell-name="{ row }">
+            <span class="users__name">
+              {{ row.name }}
+              <span v-if="isSelf(row)" class="badge badge--muted">You</span>
+            </span>
           </template>
 
-          <template v-else-if="isFiltered">No users match these filters.</template>
+          <template #cell-email="{ row }">
+            <span class="users__email">{{ row.email }}</span>
+          </template>
 
-          <template v-else>No users yet.</template>
-        </template>
-      </BaseTable>
+          <template #cell-role="{ row }">
+            <span class="badge" :class="row.role === 'admin' ? 'badge--accent' : 'badge--neutral'">
+              {{ row.role }}
+            </span>
+          </template>
 
-      <div v-if="total > 0" class="users__pagination">
-        <p class="users__range">Showing {{ rangeStart }}–{{ rangeEnd }} of {{ total }}</p>
+          <template #cell-active="{ row }">
+            <span class="badge" :class="row.active ? 'badge--success' : 'badge--muted'">
+              <span class="badge__dot" />
+              {{ row.active ? 'Active' : 'Inactive' }}
+            </span>
+          </template>
+
+          <template #cell-actions="{ row }">
+            <div class="users__actions">
+              <RouterLink class="users__edit" :to="{ name: 'user-edit', params: { id: row.id } }">
+                Edit
+              </RouterLink>
+
+              <BaseButton
+                v-can="'delete_user'"
+                class="users__delete"
+                variant="secondary"
+                :loading="deletingId === row.id"
+                :disabled="isSelf(row)"
+                :title="
+                  isSelf(row) ? 'You cannot delete the account you are signed in as' : undefined
+                "
+                @click="requestDelete(row)"
+              >
+                Delete
+              </BaseButton>
+            </div>
+          </template>
+
+          <template #empty>
+            <div class="users__empty">
+              <template v-if="isPageOutOfRange">
+                <p>Page {{ state.page }} is past the end of the results.</p>
+                <BaseButton variant="secondary" @click="setPage(1)">Back to first page</BaseButton>
+              </template>
+
+              <template v-else-if="isFiltered">
+                <p>No users match these filters.</p>
+              </template>
+
+              <template v-else>
+                <p>No users yet.</p>
+              </template>
+            </div>
+          </template>
+        </BaseTable>
+      </div>
+
+      <div v-if="total > 0" class="users__footer">
+        <p class="users__range">
+          Showing <strong>{{ rangeStart }}–{{ rangeEnd }}</strong> of {{ total }}
+        </p>
 
         <div class="users__pager">
           <BaseButton
@@ -209,12 +257,12 @@ async function handleDelete(user: User): Promise<void> {
           </BaseButton>
         </div>
 
-        <label class="users__filter">
+        <label class="users__rows">
           <span class="users__filter-label">Rows</span>
           <BaseSelect v-model="pageSize" :options="pageSizeOptions" />
         </label>
       </div>
-    </template>
+    </div>
 
     <BaseModal v-model="confirmOpen">
       <template #header>Delete user</template>
@@ -233,19 +281,20 @@ async function handleDelete(user: User): Promise<void> {
 </template>
 
 <style scoped>
-.users__controls {
+.users__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 1rem;
-  margin: 1rem 0;
+  padding: 1rem;
 }
 
 .users__search {
-  flex: 1 1 18rem;
+  flex: 1 1 20rem;
 }
 
-.users__filter {
+.users__filter,
+.users__rows {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -255,56 +304,154 @@ async function handleDelete(user: User): Promise<void> {
 .users__filter-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-text-secondary);
 }
 
 .users__error {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  background-color: #fee2e2;
-  color: #7f1d1d;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+.users__loading {
+  padding: 1rem;
+}
+
+.users__panel {
+  overflow: hidden;
+}
+
+.users__scroll {
+  overflow-x: auto;
+}
+
+.users__table :deep(th) {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.users__table :deep(.base-table__sort) {
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.users__table :deep(td) {
+  vertical-align: middle;
+}
+
+.users__table :deep(tbody tr:last-child td) {
+  border-bottom: none;
 }
 
 .users__table--compact :deep(th),
 .users__table--compact :deep(td) {
-  padding: 0.3rem 0.5rem;
+  padding: 0.3rem 0.75rem;
 }
 
-.users__confirm {
-  margin: 0;
-  color: #374151;
+.users__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.users__email {
+  color: var(--color-text-muted);
 }
 
 .users__actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.users__pagination {
+.users__edit {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.7rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.users__edit:hover {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.users__actions .users__delete {
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  padding: 0.375rem 0.7rem;
+}
+
+.users__actions .users__delete:hover:not(:disabled) {
+  border-color: var(--color-danger-border);
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-strong);
+}
+
+.users__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 0;
+}
+
+.users__footer {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-canvas);
 }
 
 .users__range,
 .users__page {
-  margin: 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
+}
+
+.users__range strong {
+  color: var(--color-text-secondary);
 }
 
 .users__pager {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.users__rows {
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
+}
+
+.users__confirm {
+  color: var(--color-text-secondary);
 }
 </style>

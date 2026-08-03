@@ -10,43 +10,82 @@ const label = computed(() => (auth.isAuthenticated ? 'Back to dashboard' : 'Go t
 
 <template>
   <section class="error-page">
-    <p class="error-page__code">403</p>
+    <div class="card error-page__card">
+      <span class="error-page__code error-page__code--danger">403</span>
 
-    <h1 class="error-page__title">Forbidden</h1>
+      <div class="error-page__copy">
+        <h1>Forbidden</h1>
+        <p class="error-page__message">
+          Your role does not have access to that page. If you think this is wrong, ask an
+          administrator to review your permissions.
+        </p>
+      </div>
 
-    <p class="error-page__message">
-      Your role does not have access to that page. If you think this is wrong, ask an administrator
-      to review your permissions.
-    </p>
-
-    <RouterLink class="error-page__link" :to="{ name: target }">{{ label }}</RouterLink>
+      <RouterLink class="error-page__link" :to="{ name: target }">{{ label }}</RouterLink>
+    </div>
   </section>
 </template>
 
 <style scoped>
 .error-page {
-  max-width: 32rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 12rem);
+}
+
+.error-page__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 30rem;
+  padding: 2rem;
+  text-align: center;
 }
 
 .error-page__code {
-  margin: 0;
-  font-size: 2.5rem;
-  font-weight: 700;
-  line-height: 1;
-  color: #d1d5db;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 
-.error-page__title {
-  margin: 0.25rem 0 0.75rem;
+.error-page__code--danger {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+.error-page__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .error-page__message {
-  margin: 0 0 1.25rem;
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .error-page__link {
-  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-accent);
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
   font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.error-page__link:hover {
+  background-color: var(--color-accent-strong);
+  color: #fff;
 }
 </style>

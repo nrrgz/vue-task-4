@@ -28,43 +28,70 @@ const density = computed<string>({
 </script>
 
 <template>
-  <section class="settings">
-    <h1>Settings</h1>
+  <section class="page">
+    <div class="page__header">
+      <div>
+        <h1>Settings</h1>
+        <p class="page__subtitle">
+          Visible to every signed-in role, including <strong>{{ auth.role }}</strong
+          >.
+        </p>
+      </div>
+    </div>
 
-    <p class="settings__hint">Visible to every signed-in role, including {{ auth.role }}.</p>
+    <div class="card settings__card">
+      <div class="settings__row">
+        <div class="settings__copy">
+          <h2>Table density</h2>
+          <p class="settings__help">
+            Controls row spacing on the users table. Saved to this browser.
+          </p>
+        </div>
 
-    <label class="settings__field">
-      <span class="settings__label">Table density</span>
-      <BaseSelect v-model="density" :options="densityOptions" />
-      <span class="settings__help">
-        Controls row spacing on the users table. Saved to this browser.
-      </span>
-    </label>
+        <label class="settings__field">
+          <span class="settings__label">Density</span>
+          <BaseSelect v-model="density" :options="densityOptions" />
+        </label>
+      </div>
+    </div>
   </section>
 </template>
 
 <style scoped>
-.settings__hint {
-  color: #6b7280;
-  font-size: 0.9rem;
+.settings__card {
+  padding: 1.25rem;
+}
+
+.settings__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.settings__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 28rem;
+}
+
+.settings__help {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
 }
 
 .settings__field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  max-width: 18rem;
-  margin-top: 1rem;
+  min-width: 12rem;
 }
 
 .settings__label {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #374151;
-}
-
-.settings__help {
-  font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 </style>

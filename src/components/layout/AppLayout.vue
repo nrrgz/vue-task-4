@@ -17,13 +17,23 @@ const auth = useAuthStore()
 
 <style scoped>
 .app-layout {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background-color: #f9fafb;
+  background-color: var(--color-canvas);
 }
 
 .app-layout__main {
-  max-width: 60rem;
+  flex: 1;
+  width: 100%;
+  max-width: var(--layout-max);
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 2rem var(--layout-gutter) 3.5rem;
+}
+
+@media (max-width: 40rem) {
+  .app-layout__main {
+    padding: 1.5rem 1rem 2.5rem;
+  }
 }
 </style>

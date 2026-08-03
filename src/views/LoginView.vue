@@ -44,50 +44,98 @@ async function handleSubmit(): Promise<void> {
 
 <template>
   <section class="login">
-    <h1 class="login__title">Sign in</h1>
+    <div class="card login__card">
+      <span class="login__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" />
+          <rect x="13" y="3" width="8" height="5" rx="2" fill="currentColor" opacity="0.55" />
+          <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.55" />
+          <rect x="13" y="10" width="8" height="11" rx="2" fill="currentColor" />
+        </svg>
+      </span>
 
-    <form class="login__form" @submit.prevent="handleSubmit">
-      <BaseInput
-        v-model="email"
-        label="Email"
-        type="email"
-        autocomplete="username"
-        required
-        :disabled="submitting"
-      />
+      <div class="login__heading">
+        <h1>Sign in</h1>
+        <p class="login__subtitle">Enter your credentials to open the admin panel.</p>
+      </div>
 
-      <BaseInput
-        v-model="password"
-        label="Password"
-        type="password"
-        autocomplete="current-password"
-        required
-        :disabled="submitting"
-      />
+      <form class="login__form" @submit.prevent="handleSubmit">
+        <BaseInput
+          v-model="email"
+          label="Email"
+          type="email"
+          autocomplete="username"
+          required
+          :disabled="submitting"
+        />
 
-      <BaseButton type="submit" :loading="submitting">Sign in</BaseButton>
-    </form>
+        <BaseInput
+          v-model="password"
+          label="Password"
+          type="password"
+          autocomplete="current-password"
+          required
+          :disabled="submitting"
+        />
+
+        <BaseButton class="login__submit" type="submit" :loading="submitting">Sign in</BaseButton>
+      </form>
+    </div>
   </section>
 </template>
 
 <style scoped>
 .login {
-  max-width: 22rem;
-  margin: 3rem auto;
-  padding: 1.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 5.5rem);
 }
 
-.login__title {
-  margin: 0 0 1.25rem;
-  font-size: 1.25rem;
+.login__card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 23rem;
+  padding: 1.75rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.login__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.login__mark svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.login__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.login__subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
 }
 
 .login__form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+.login__submit {
+  margin-top: 0.25rem;
 }
 </style>

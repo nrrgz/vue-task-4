@@ -129,22 +129,34 @@ watch(userId, load, { immediate: true })
 </script>
 
 <template>
-  <section class="user-edit">
-    <h1>Edit user</h1>
+  <section class="page">
+    <div class="page__header">
+      <div>
+        <RouterLink class="user-edit__back" :to="{ name: 'users' }">Back to users</RouterLink>
+        <h1>Edit user</h1>
+        <p class="page__subtitle">
+          Every control below is rendered from a field config, not hand-written markup.
+        </p>
+      </div>
+    </div>
 
     <p v-if="error" class="user-edit__error" role="alert">
-      {{ error }}
+      <span>{{ error }}</span>
       <BaseButton variant="secondary" @click="load">Retry</BaseButton>
     </p>
 
-    <SkeletonLoader v-else-if="loading" :rows="3" />
+    <div v-else-if="loading" class="card user-edit__card">
+      <SkeletonLoader :rows="3" />
+    </div>
 
-    <DynamicForm v-else v-model="model" :fields="fields" :disabled="saving" @submit="handleSubmit">
-      <template #actions>
-        <BaseButton type="submit" :loading="saving">Save</BaseButton>
-        <BaseButton variant="secondary" @click="goToUsers">Cancel</BaseButton>
-      </template>
-    </DynamicForm>
+    <div v-else class="card user-edit__card">
+      <DynamicForm v-model="model" :fields="fields" :disabled="saving" @submit="handleSubmit">
+        <template #actions>
+          <BaseButton type="submit" :loading="saving">Save changes</BaseButton>
+          <BaseButton variant="secondary" @click="goToUsers">Cancel</BaseButton>
+        </template>
+      </DynamicForm>
+    </div>
 
     <BaseModal v-model="confirmOpen">
       <template #header>Unsaved changes</template>
@@ -162,19 +174,41 @@ watch(userId, load, { immediate: true })
 </template>
 
 <style scoped>
+.user-edit__back {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.user-edit__back::before {
+  content: '\2190';
+  margin-right: 0.35rem;
+}
+
+.user-edit__back:hover {
+  text-decoration: underline;
+}
+
 .user-edit__error {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  background-color: #fee2e2;
-  color: #7f1d1d;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+.user-edit__card {
+  padding: 1.5rem;
 }
 
 .user-edit__warning {
-  margin: 0;
-  color: #374151;
+  color: var(--color-text-secondary);
 }
 </style>
