@@ -1,7 +1,5 @@
 import axios from 'axios'
 import type { InternalAxiosRequestConfig } from 'axios'
-import { router } from '../router'
-import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import type { ApiError } from '../types/api'
 
@@ -23,6 +21,17 @@ export const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+let readAuthToken: (() => string | null) | null = null
+let handleUnauthorized: (() => void) | null = null
+
+export function setAuthTokenGetter(fn: () => string | null): void {
+  readAuthToken = fn
+}
+
+export function setUnauthorizedHandler(fn: () => void): void {
+  handleUnauthorized = fn
+}
+
 function isLoginRequest(config: InternalAxiosRequestConfig | undefined): boolean {
   return config?.url?.includes(LOGIN_PATH) ?? false
 }
@@ -36,10 +45,10 @@ export function isReportedGlobally(cause: unknown): boolean {
 }
 
 client.interceptors.request.use((config) => {
-  const auth = useAuthStore()
+  const token = readAuthToken?.() ?? null
 
-  if (auth.token !== null) {
-    config.headers.set('Authorization', `Bearer ${auth.token}`)
+  if (token !== null) {
+    config.headers.set('Authorization', `Bearer ${token}`)
   }
 
   return config
@@ -47,7 +56,7 @@ client.interceptors.request.use((config) => {
 
 client.interceptors.response.use(
   (response) => response,
-  async (error: unknown) => {
+  (error: unknown) => {
     if (!axios.isAxiosError(error)) {
       return Promise.reject(error)
     }
@@ -55,14 +64,8 @@ client.interceptors.response.use(
     const status = error.response?.status
 
     if (status === 401 && !isLoginRequest(error.config)) {
-      const auth = useAuthStore()
-      auth.logout()
       useNotificationStore().notify('error', SESSION_ERROR)
-
-      const current = router.currentRoute.value
-      if (current.name !== 'login') {
-        await router.push({ name: 'login', query: { redirect: current.fullPath } })
-      }
+      handleUnauthorized?.()
     }
 
     if (status === 403) {
