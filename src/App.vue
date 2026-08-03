@@ -6,9 +6,9 @@ import ToastContainer from './components/feedback/ToastContainer.vue'
 
 <template>
   <AppLayout>
-    <RouterView v-slot="{ Component }">
+    <RouterView v-slot="{ Component, route }">
       <Transition name="route" mode="out-in">
-        <component :is="Component" />
+        <component :is="Component" v-if="Component" :key="route.path" />
       </Transition>
     </RouterView>
   </AppLayout>

@@ -122,7 +122,9 @@ watch(confirmOpen, (open) => {
 onBeforeRouteLeave(() => {
   if (!isDirty.value) return true
 
+  settle(false)
   confirmOpen.value = true
+
   return new Promise<boolean>((resolve) => {
     resolveLeave = resolve
   })
