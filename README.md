@@ -81,6 +81,18 @@ service worker restarts — otherwise every refresh would log you out.
 `public/mockServiceWorker.js` is generated (`npx msw init public/ --save`) but committed, since a
 fresh clone has no mock backend without it.
 
+## Scope & known limitations
+
+- **The mock token never expires and there is no refresh-token flow.** Sessions end only on
+  logout, or when a request returns 401 — which the response interceptor turns into a logout and a
+  redirect to `/login` with the current path as `redirect`. Real expiry, refresh rotation and
+  server-side revocation are out of scope.
+- **Boot revalidation fails silently by design.** If the `GET /me` fired after mount cannot
+  complete, nothing is surfaced and the session continues from the persisted data; only a 401
+  ends it.
+- **`active` is stored but not enforced.** An account marked inactive can still sign in; the flag
+  exists to exercise the dynamic form's checkbox field type.
+
 ## Definition of done
 
 - [x] Admin login → every page reachable, delete buttons visible
