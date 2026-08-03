@@ -1,7 +1,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { LocationQuery, LocationQueryRaw, LocationQueryValue } from 'vue-router'
-import { apiErrorMessage } from '../api/errors'
+import { apiErrorMessage, isCanceledError } from '../api/errors'
 import * as usersApi from '../api/users'
 import type { SortOrder } from '../types/api'
 import type { Role, User, UserSortField, UsersQuery } from '../types/user'
@@ -104,20 +104,26 @@ export function useServerTable() {
   )
 
   let requestId = 0
+  let inFlight: AbortController | null = null
 
   async function fetchRows(): Promise<void> {
+    inFlight?.abort()
+
+    const controller = new AbortController()
+    inFlight = controller
+
     const id = ++requestId
     loading.value = true
     error.value = null
 
     try {
-      const result = await usersApi.list(toApiQuery(state.value))
+      const result = await usersApi.list(toApiQuery(state.value), controller.signal)
       if (id !== requestId) return
 
       rows.value = result.data
       total.value = result.total
     } catch (cause) {
-      if (id !== requestId) return
+      if (isCanceledError(cause) || id !== requestId) return
 
       error.value = apiErrorMessage(cause)
       rows.value = []
@@ -174,7 +180,10 @@ export function useServerTable() {
 
   watch(stateKey, () => void fetchRows(), { immediate: true })
 
-  onUnmounted(() => clearTimeout(searchTimer))
+  onUnmounted(() => {
+    clearTimeout(searchTimer)
+    inFlight?.abort()
+  })
 
   return {
     state,

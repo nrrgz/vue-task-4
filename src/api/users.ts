@@ -2,10 +2,11 @@ import { client } from './client'
 import type { Paginated } from '../types/api'
 import type { User, UserUpdate, UsersQuery } from '../types/user'
 
-export async function list(query: UsersQuery): Promise<Paginated<User>> {
+export async function list(query: UsersQuery, signal?: AbortSignal): Promise<Paginated<User>> {
   const { data } = await client.get<Paginated<User>>('/users', {
     params: query,
     handledLocally: true,
+    signal,
   })
   return data
 }

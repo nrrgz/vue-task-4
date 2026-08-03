@@ -12,6 +12,10 @@ export const NETWORK_ERROR = 'Cannot reach the server. Check your connection and
 export const FORBIDDEN_ERROR = 'You do not have permission to do that.'
 export const SESSION_ERROR = 'Your session has expired. Please sign in again.'
 
+export function isCanceledError(cause: unknown): boolean {
+  return axios.isCancel(cause)
+}
+
 export function apiErrorMessage(cause: unknown): string {
   if (axios.isAxiosError<ApiError>(cause)) {
     if (cause.response === undefined) {

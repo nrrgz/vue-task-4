@@ -47,7 +47,7 @@ client.interceptors.request.use((config) => {
 client.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    if (!axios.isAxiosError(error)) {
+    if (!axios.isAxiosError(error) || axios.isCancel(error)) {
       return Promise.reject(error)
     }
 
