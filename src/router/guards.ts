@@ -1,4 +1,5 @@
 import type { Router } from 'vue-router'
+import { canAccess } from './access'
 import { useAuthStore } from '../stores/auth'
 
 export function registerGuards(router: Router): void {
@@ -13,12 +14,8 @@ export function registerGuards(router: Router): void {
       return { name: 'dashboard' }
     }
 
-    const allowedRoles = to.meta.roles
-    if (allowedRoles !== undefined && allowedRoles.length > 0) {
-      const role = auth.role
-      if (role === null || !allowedRoles.includes(role)) {
-        return to.name === 'forbidden' ? true : { name: 'forbidden' }
-      }
+    if (!canAccess(to.meta, auth.role)) {
+      return to.name === 'forbidden' ? true : { name: 'forbidden' }
     }
 
     return true

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import BaseButton from '../base/BaseButton.vue'
+import { canAccess } from '../../router/access'
 import { useAuthStore } from '../../stores/auth'
 
 interface NavItem {
@@ -19,13 +20,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const visibleItems = computed(() =>
-  NAV_ITEMS.filter((item) => {
-    const allowedRoles = router.resolve({ name: item.name }).meta.roles
-    if (allowedRoles === undefined) {
-      return true
-    }
-    return auth.role !== null && allowedRoles.includes(auth.role)
-  }),
+  NAV_ITEMS.filter((item) => canAccess(router.resolve({ name: item.name }).meta, auth.role)),
 )
 
 const initials = computed(() => {
