@@ -3,6 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import type { LocationQuery, LocationQueryRaw, LocationQueryValue } from 'vue-router'
 import { apiErrorMessage, isCanceledError } from '../api/errors'
 import * as usersApi from '../api/users'
+import { USERS_QUERY_KEYS as PARAM } from '../types/user'
 import type { SortOrder } from '../types/api'
 import type { Role, User, UserSortField, UsersQuery } from '../types/user'
 
@@ -40,16 +41,16 @@ function positiveInt(value: string | null, fallback: number): number {
 }
 
 function parse(query: LocationQuery): TableState {
-  const sort = firstValue(query.sort)
-  const role = firstValue(query.role)
-  const pageSize = positiveInt(firstValue(query.pageSize), DEFAULT_PAGE_SIZE)
+  const sort = firstValue(query[PARAM.sort])
+  const role = firstValue(query[PARAM.role])
+  const pageSize = positiveInt(firstValue(query[PARAM.pageSize]), DEFAULT_PAGE_SIZE)
 
   return {
-    page: positiveInt(firstValue(query.page), 1),
+    page: positiveInt(firstValue(query[PARAM.page]), 1),
     pageSize: PAGE_SIZE_OPTIONS.includes(pageSize) ? pageSize : DEFAULT_PAGE_SIZE,
     sort: isSortField(sort) ? sort : null,
-    order: firstValue(query.order) === 'desc' ? 'desc' : 'asc',
-    search: (firstValue(query.search) ?? '').trim(),
+    order: firstValue(query[PARAM.order]) === 'desc' ? 'desc' : 'asc',
+    search: (firstValue(query[PARAM.search]) ?? '').trim(),
     role: isRole(role) ? role : null,
   }
 }
@@ -57,16 +58,16 @@ function parse(query: LocationQuery): TableState {
 function serialize(state: TableState): LocationQueryRaw {
   const query: LocationQueryRaw = {}
 
-  if (state.search) query.search = state.search
-  if (state.role) query.role = state.role
+  if (state.search) query[PARAM.search] = state.search
+  if (state.role) query[PARAM.role] = state.role
 
   if (state.sort) {
-    query.sort = state.sort
-    query.order = state.order
+    query[PARAM.sort] = state.sort
+    query[PARAM.order] = state.order
   }
 
-  if (state.page > 1) query.page = String(state.page)
-  if (state.pageSize !== DEFAULT_PAGE_SIZE) query.pageSize = String(state.pageSize)
+  if (state.page > 1) query[PARAM.page] = String(state.page)
+  if (state.pageSize !== DEFAULT_PAGE_SIZE) query[PARAM.pageSize] = String(state.pageSize)
 
   return query
 }

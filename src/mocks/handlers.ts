@@ -2,6 +2,7 @@ import { HttpResponse, delay, http } from 'msw'
 import type { DefaultBodyType, PathParams } from 'msw'
 import type { ApiError, Paginated, SortOrder } from '../types/api'
 import type { AuthResponse, AuthUser, Credentials, Permission } from '../types/auth'
+import { USERS_QUERY_KEYS as PARAM } from '../types/user'
 import type { Role, User, UserSortField, UserUpdate } from '../types/user'
 import {
   deleteUser,
@@ -134,13 +135,17 @@ const listUsersRoute = http.get<PathParams, DefaultBodyType, Paginated<User> | A
     }
 
     const url = new URL(request.url)
-    const search = (url.searchParams.get('search') ?? '').trim().toLowerCase()
-    const roleFilter = url.searchParams.get('role')
-    const sortParam = url.searchParams.get('sort')
+    const search = (url.searchParams.get(PARAM.search) ?? '').trim().toLowerCase()
+    const roleFilter = url.searchParams.get(PARAM.role)
+    const sortParam = url.searchParams.get(PARAM.sort)
     const sort: UserSortField = isSortField(sortParam) ? sortParam : 'id'
-    const order: SortOrder = url.searchParams.get('order') === 'desc' ? 'desc' : 'asc'
-    const page = positiveInt(url.searchParams.get('page'), 1, Number.MAX_SAFE_INTEGER)
-    const pageSize = positiveInt(url.searchParams.get('pageSize'), DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE)
+    const order: SortOrder = url.searchParams.get(PARAM.order) === 'desc' ? 'desc' : 'asc'
+    const page = positiveInt(url.searchParams.get(PARAM.page), 1, Number.MAX_SAFE_INTEGER)
+    const pageSize = positiveInt(
+      url.searchParams.get(PARAM.pageSize),
+      DEFAULT_PAGE_SIZE,
+      MAX_PAGE_SIZE,
+    )
 
     let matched = listUsers()
 

@@ -27,3 +27,12 @@ export interface UsersQuery {
   search?: string
   role?: Role
 }
+
+export const USERS_QUERY_KEYS = {
+  page: 'page',
+  pageSize: 'pageSize',
+  sort: 'sort',
+  order: 'order',
+  search: 'search',
+  role: 'role',
+} as const satisfies Record<keyof UsersQuery, string>
