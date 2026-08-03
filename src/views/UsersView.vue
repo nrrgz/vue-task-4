@@ -41,7 +41,6 @@ const columns = [
   { key: 'name', label: 'Name', sortable: true },
   { key: 'email', label: 'Email', sortable: true },
   { key: 'role', label: 'Role', sortable: true },
-  { key: 'active', label: 'Status' },
   { key: 'actions', label: 'Actions', hideLabel: true },
 ]
 
@@ -181,13 +180,6 @@ async function handleDelete(user: User): Promise<void> {
           <template #cell-role="{ row }">
             <span class="badge" :class="row.role === 'admin' ? 'badge--accent' : 'badge--neutral'">
               {{ row.role }}
-            </span>
-          </template>
-
-          <template #cell-active="{ row }">
-            <span class="badge" :class="row.active ? 'badge--success' : 'badge--muted'">
-              <span class="badge__dot" />
-              {{ row.active ? 'Active' : 'Inactive' }}
             </span>
           </template>
 

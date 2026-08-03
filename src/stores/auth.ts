@@ -68,6 +68,13 @@ export const useAuthStore = defineStore('auth', () => {
     return response.user
   }
 
+  async function refresh(): Promise<void> {
+    const current = await authApi.me()
+
+    user.value = current
+    localStorage.setItem(USER_KEY, JSON.stringify(current))
+  }
+
   function logout(): void {
     clear()
   }
@@ -94,6 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
     hasPermission,
     login,
     logout,
+    refresh,
     hydrate,
   }
 })

@@ -7,12 +7,14 @@ import BaseButton from '../components/base/BaseButton.vue'
 import BaseModal from '../components/base/BaseModal.vue'
 import SkeletonLoader from '../components/feedback/SkeletonLoader.vue'
 import DynamicForm from '../components/form/DynamicForm.vue'
+import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import type { FieldConfig, FieldValue, FormModel } from '../types/form'
 import type { Role, User } from '../types/user'
 
 const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 const notifications = useNotificationStore()
 
 const fields: FieldConfig[] = [
@@ -88,6 +90,11 @@ async function handleSubmit(): Promise<void> {
 
     model.value = toModel(updated)
     initial.value = toModel(updated)
+
+    if (auth.user?.id === updated.id) {
+      await auth.refresh()
+    }
+
     notifications.notify('success', `Saved ${updated.name}`)
   } catch (cause) {
     if (!isReportedGlobally(cause)) {

@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
 const auth = useAuthStore()
 
 const firstName = computed(() => (auth.user?.name ?? '').split(' ').at(0) ?? '')
-
-const roleBadgeClass = computed(() => (auth.role === 'admin' ? 'badge--accent' : 'badge--neutral'))
 </script>
 
 <template>
@@ -18,71 +17,35 @@ const roleBadgeClass = computed(() => (auth.role === 'admin' ? 'badge--accent' :
       </div>
     </div>
 
-    <div class="dashboard__grid">
-      <div class="card dashboard__card">
-        <h2>Account</h2>
+    <div class="card dashboard__card">
+      <h2>What you can do here</h2>
 
-        <dl class="dashboard__facts">
-          <dt>Name</dt>
-          <dd>{{ auth.user?.name }}</dd>
+      <p class="dashboard__hint">
+        These permissions are issued by the backend when you sign in. Individual controls across the
+        app are gated against this list.
+      </p>
 
-          <dt>Email</dt>
-          <dd>{{ auth.user?.email }}</dd>
+      <ul class="dashboard__permissions">
+        <li v-for="permission in auth.permissions" :key="permission">
+          <span class="badge badge--neutral">{{ permission }}</span>
+        </li>
+      </ul>
 
-          <dt>Role</dt>
-          <dd>
-            <span class="badge" :class="roleBadgeClass">{{ auth.role }}</span>
-          </dd>
-        </dl>
-      </div>
-
-      <div class="card dashboard__card">
-        <h2>Permissions</h2>
-
-        <p class="dashboard__hint">
-          Issued by the backend on sign in. Individual controls are gated against this list.
-        </p>
-
-        <ul class="dashboard__permissions">
-          <li v-for="permission in auth.permissions" :key="permission">
-            <span class="badge badge--neutral">{{ permission }}</span>
-          </li>
-        </ul>
-      </div>
+      <p class="dashboard__hint">
+        Your account details are on the
+        <RouterLink :to="{ name: 'settings' }">settings</RouterLink> page.
+      </p>
     </div>
   </section>
 </template>
 
 <style scoped>
-.dashboard__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  gap: 1rem;
-  align-items: start;
-}
-
 .dashboard__card {
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
   padding: 1.25rem;
-}
-
-.dashboard__facts {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.6rem 1.25rem;
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-.dashboard__facts dt {
-  color: var(--color-text-muted);
-}
-
-.dashboard__facts dd {
-  margin: 0;
-  color: var(--color-text);
+  max-width: 40rem;
 }
 
 .dashboard__hint {

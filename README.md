@@ -30,18 +30,17 @@ user, and the frontend never maps a role to permissions itself. The role→permi
 only in `src/mocks/db.ts`, which stands in for the server. Adding a permission to a role is a
 backend change; the UI picks it up with no edit.
 
-**Session hydration is synchronous.** `main.ts` calls `authStore.hydrate()` — a plain
-`localStorage` read — after Pinia is installed but before `app.use(router)` and `app.mount()`. The
-store is therefore populated before the router's first navigation, so a refresh on a protected
-route is not bounced to `/login`.
+**Session hydration is synchronous, then revalidated.** `main.ts` calls `authStore.hydrate()` — a
+plain `localStorage` read — after Pinia is installed but before `app.use(router)` and
+`app.mount()`. The store is therefore populated before the router's first navigation, so a refresh
+on a protected route is not bounced to `/login`.
 
-The production-realistic alternative is to revalidate the token via `GET /me` on boot. That is
-strictly more correct — it detects a token revoked server-side, which the sync path cannot — but it
-forces the navigation guard to become async and reintroduces the ordering race the sync read
-avoids: the guard must either await an in-flight request or run against an empty store. Given a
-mock backend that cannot revoke tokens anyway, the added failure surface bought nothing, so the
-tradeoff is: **a revoked token stays trusted until its next request 401s**, at which point the
-response interceptor logs out and redirects.
+A single `GET /me` then revalidates that cached session, fired **after** `router.isReady()` and
+`mount()`. Running it there keeps the guard synchronous — no awaiting an in-flight request, no
+guard running against an empty store — while still catching a token the server no longer accepts
+and re-syncing the cached user with the backend. Without it, editing your own account leaves a
+stale name in the header after a reload, because the mock database re-seeds and `localStorage` does
+not. A transport failure keeps the cached session; a 401 logs out via the response interceptor.
 
 **Roles gate routes; permissions gate actions.** `meta: { roles: ['admin'] }` decides which pages
 exist for you and is enforced in one `beforeEach`. `v-can="'delete_user'"` decides which controls

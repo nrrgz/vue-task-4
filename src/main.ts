@@ -24,13 +24,18 @@ async function bootstrap(): Promise<void> {
   const app = createApp(App)
   app.use(createPinia())
 
-  useAuthStore().hydrate()
+  const auth = useAuthStore()
+  auth.hydrate()
 
   app.directive('can', can)
   app.use(router)
   await router.isReady()
 
   app.mount('#app')
+
+  if (auth.isAuthenticated) {
+    void auth.refresh().catch(() => undefined)
+  }
 }
 
 void bootstrap()

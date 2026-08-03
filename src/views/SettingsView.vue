@@ -15,6 +15,8 @@ const densityOptions = [
   { label: 'Compact', value: 'compact' },
 ]
 
+const roleBadgeClass = computed(() => (auth.role === 'admin' ? 'badge--accent' : 'badge--neutral'))
+
 const density = computed<string>({
   get: () => preferences.density,
   set: (value) => {
@@ -32,14 +34,28 @@ const density = computed<string>({
     <div class="page__header">
       <div>
         <h1>Settings</h1>
-        <p class="page__subtitle">
-          Visible to every signed-in role, including <strong>{{ auth.role }}</strong
-          >.
-        </p>
+        <p class="page__subtitle">Your account, plus any preferences your role can change.</p>
       </div>
     </div>
 
     <div class="card settings__card">
+      <h2>Account</h2>
+
+      <dl class="settings__facts">
+        <dt>Name</dt>
+        <dd>{{ auth.user?.name }}</dd>
+
+        <dt>Email</dt>
+        <dd>{{ auth.user?.email }}</dd>
+
+        <dt>Role</dt>
+        <dd>
+          <span class="badge" :class="roleBadgeClass">{{ auth.role }}</span>
+        </dd>
+      </dl>
+    </div>
+
+    <div v-can="'view_users'" class="card settings__card">
       <div class="settings__row">
         <div class="settings__copy">
           <h2>Table density</h2>
@@ -59,7 +75,27 @@ const density = computed<string>({
 
 <style scoped>
 .settings__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
   padding: 1.25rem;
+}
+
+.settings__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.6rem 1.25rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.settings__facts dt {
+  color: var(--color-text-muted);
+}
+
+.settings__facts dd {
+  margin: 0;
+  color: var(--color-text);
 }
 
 .settings__row {
