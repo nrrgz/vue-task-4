@@ -68,20 +68,31 @@ const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
   user: ['view_settings'],
 }
 
+const credentials = new Map<number, string>()
+
 function seed(): User[] {
-  const seeded: User[] = TEST_ACCOUNTS.map((account, index) => ({
-    id: index + 1,
-    name: account.name,
-    email: account.email,
-    role: account.role,
-    active: true,
-  }))
+  credentials.clear()
+
+  const seeded: User[] = TEST_ACCOUNTS.map((account, index) => {
+    const id = index + 1
+    credentials.set(id, account.password)
+
+    return {
+      id,
+      name: account.name,
+      email: account.email,
+      role: account.role,
+      active: true,
+    }
+  })
 
   for (let index = seeded.length; index < SEED_SIZE; index += 1) {
     const id = index + 1
     const cycle = Math.floor(index / FIRST_NAMES.length)
     const first = FIRST_NAMES[index % FIRST_NAMES.length]
     const last = LAST_NAMES[(index * 7 + cycle) % LAST_NAMES.length]
+
+    credentials.set(id, GENERATED_ACCOUNT_PASSWORD)
 
     seeded.push({
       id,
@@ -110,19 +121,12 @@ export function findUserByEmail(email: string): User | undefined {
   return users.find((user) => user.email.toLowerCase() === normalised)
 }
 
-export function passwordFor(email: string): string {
-  const account = TEST_ACCOUNTS.find(
-    (candidate) => candidate.email.toLowerCase() === email.trim().toLowerCase(),
-  )
-  return account ? account.password : GENERATED_ACCOUNT_PASSWORD
-}
-
 export function verifyCredentials(email: string, password: string): User | undefined {
   const user = findUserByEmail(email)
   if (!user) {
     return undefined
   }
-  return passwordFor(user.email) === password ? user : undefined
+  return credentials.get(user.id) === password ? user : undefined
 }
 
 export function updateUser(id: number, changes: UserUpdate): User | undefined {
@@ -148,7 +152,13 @@ export function updateUser(id: number, changes: UserUpdate): User | undefined {
 export function deleteUser(id: number): boolean {
   const before = users.length
   users = users.filter((user) => user.id !== id)
-  return users.length < before
+
+  if (users.length < before) {
+    credentials.delete(id)
+    return true
+  }
+
+  return false
 }
 
 export function permissionsFor(role: Role): Permission[] {

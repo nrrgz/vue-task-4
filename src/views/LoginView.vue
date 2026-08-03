@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { apiErrorMessage } from '../api/client'
 import BaseButton from '../components/base/BaseButton.vue'
 import BaseInput from '../components/base/BaseInput.vue'
 import { useAuthStore } from '../stores/auth'
@@ -34,8 +35,8 @@ async function handleSubmit(): Promise<void> {
     await auth.login({ email: email.value, password: password.value })
     notifications.notify('success', 'Signed in')
     await router.replace(safeRedirectTarget())
-  } catch {
-    notifications.notify('error', 'Invalid email or password')
+  } catch (cause) {
+    notifications.notify('error', apiErrorMessage(cause))
   } finally {
     submitting.value = false
   }
