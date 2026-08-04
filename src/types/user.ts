@@ -36,3 +36,7 @@ export const USERS_QUERY_KEYS = {
   search: 'search',
   role: 'role',
 } as const satisfies Record<keyof UsersQuery, string>
+
+export type UsersRequestParams = {
+  [K in keyof UsersQuery as (typeof USERS_QUERY_KEYS)[K]]: UsersQuery[K]
+}
