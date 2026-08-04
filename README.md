@@ -42,10 +42,11 @@ and re-syncing the cached user with the backend. Without it, editing your own ac
 stale name in the header after a reload, because the mock database re-seeds and `localStorage` does
 not. A transport failure keeps the cached session; a 401 logs out via the response interceptor.
 
-That boot call swallows its own rejection on purpose — revalidation is best-effort, so a failed
-`GET /me` is silent and the session simply continues from the persisted data. It also captures the
-token before awaiting and discards the response if the token changed meanwhile, so logging out (or
-signing in as someone else) mid-request cannot resurrect the previous user or re-persist them.
+That boot call swallows its own rejection on purpose, and `me()` opts out of the interceptor's
+global error toast — revalidation is best-effort, so a failed `GET /me` is silent and the session
+simply continues from the persisted data. It also captures the token before awaiting and discards
+the response if the token changed meanwhile, so logging out (or signing in as someone else)
+mid-request cannot resurrect the previous user or re-persist them.
 
 **Roles gate routes; permissions gate actions.** `meta: { roles: ['admin'] }` decides which pages
 exist for you and is enforced in one `beforeEach`. `v-can="'delete_user'"` decides which controls
@@ -64,9 +65,11 @@ The route table is what makes the loop unreachable.
    button removes the temptation, not the capability — the API rejects the call regardless. Because
    it runs in `mounted`, a denied element also exists for one frame before it is replaced by a
    comment anchor.
-2. _It is not reactive._ Directives do not re-run when reactive state changes, so permissions
-   gained or lost after mount are not reflected until the element remounts. This is fine here
-   because permissions only change at login/logout, which remounts the tree anyway.
+2. _It is not reactive._ The directive is evaluated once on mount and never re-runs on reactive
+   change, so a permission lost in-app — an admin demoting themselves through the edit form, which
+   `auth.refresh()` applies live — leaves already-mounted controls in the DOM until the next
+   navigation remounts them. The backend rejects those calls with a 403 regardless, so this is a
+   UI-integrity limitation, not a security hole.
 
 **The URL is the single source of truth for table state.** Page, size, sort, order, search and role
 filter live in `route.query`; UI actions push a new query and a watcher fetches from it. No
@@ -91,9 +94,9 @@ fresh clone has no mock backend without it.
   logout, or when a request returns 401 — which the response interceptor turns into a logout and a
   redirect to `/login` with the current path as `redirect`. Real expiry, refresh rotation and
   server-side revocation are out of scope.
-- **Boot revalidation fails silently by design.** If the `GET /me` fired after mount cannot
-  complete, nothing is surfaced and the session continues from the persisted data; only a 401
-  ends it.
+- **Boot revalidation fails silently by design.** `me()` is marked `handledLocally`, so a transport
+  or server failure surfaces nothing and the session continues from the persisted data. Only a 401
+  ends it — that branch runs before the opt-out, logging you out with a session-expired toast.
 - **`active` is stored but not enforced.** An account marked inactive can still sign in; the flag
   exists to exercise the dynamic form's checkbox field type.
 
