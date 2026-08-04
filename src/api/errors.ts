@@ -1,16 +1,19 @@
 import axios from 'axios'
 import type { ApiError } from '../types/api'
 
-declare module 'axios' {
-  export interface AxiosRequestConfig {
-    handledLocally?: boolean
-  }
-}
-
 const GENERIC_ERROR = 'Something went wrong. Please try again.'
 const NETWORK_ERROR = 'Cannot reach the server. Check your connection and try again.'
-export const FORBIDDEN_ERROR = 'You do not have permission to do that.'
 export const SESSION_ERROR = 'Your session has expired. Please sign in again.'
+
+const reportedErrors = new WeakSet<object>()
+
+export function markErrorReported(error: object): void {
+  reportedErrors.add(error)
+}
+
+export function isReportedError(cause: unknown): boolean {
+  return typeof cause === 'object' && cause !== null && reportedErrors.has(cause)
+}
 
 export function isCanceledError(cause: unknown): boolean {
   return axios.isCancel(cause)

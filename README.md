@@ -42,11 +42,10 @@ and re-syncing the cached user with the backend. Without it, editing your own ac
 stale name in the header after a reload, because the mock database re-seeds and `localStorage` does
 not. A transport failure keeps the cached session; a 401 logs out via the response interceptor.
 
-That boot call swallows its own rejection on purpose, and `me()` opts out of the interceptor's
-global error toast — revalidation is best-effort, so a failed `GET /me` is silent and the session
-simply continues from the persisted data. It also captures the token before awaiting and discards
-the response if the token changed meanwhile, so logging out (or signing in as someone else)
-mid-request cannot resurrect the previous user or re-persist them.
+That boot call swallows its own rejection on purpose — revalidation is best-effort, so a failed
+`GET /me` shows nothing and the session simply continues from the persisted data. It also captures
+the token before awaiting and discards the response if the token changed meanwhile, so logging out
+(or signing in as someone else) mid-request cannot resurrect the previous user or re-persist them.
 
 **Roles gate routes; permissions gate actions.** `meta: { roles: ['admin'] }` decides which pages
 exist for you and is enforced in one `beforeEach`. `v-can="'delete_user'"` decides which controls
@@ -58,11 +57,27 @@ The guard needs no redirect-loop protection of its own: `/login` and `/403` carr
 neither the `requiresAuth` check nor the role check can match them and redirect them to themselves.
 The route table is what makes the loop unreachable.
 
+**The interceptor owns the session; each caller owns its error display.** The axios interceptor has
+exactly two global jobs, and generic error reporting is not one of them. The request half attaches
+`Authorization: Bearer …`. The response half turns a 401 on anything other than the login call into
+a logout, a redirect to `/login?redirect=…`, and one session-expired toast. Every other failure —
+403, 404, 409, 500, a dead network — rejects untouched, because only the caller knows whether the
+right surface is a toast, an inline panel with a Retry button, or nothing at all. The users table
+and the edit form's initial load render failures inline; a failed delete or save raises a toast; the
+boot revalidation stays silent. A failed login is reported by `LoginView`, which is why the 401
+branch excludes the login request rather than logging you out of a session you never had.
+
+That split leaves one seam. On a 401 the interceptor has already reported, so a caller that toasted
+as well would show two messages for one failure. The interceptor therefore tags the rejected error
+via `markErrorReported`, and the callers that toast check `isReportedError` and skip. Inline error
+state is still set — the table can show its error panel alongside the session-expired toast, which
+is one message plus one piece of page state, not two messages.
+
 **`v-can` has two caveats, both deliberate.**
 
 1. _It is cosmetic._ The directive only hides a control. Real authorization is the backend
-   returning 403, caught by the response interceptor, which surfaces a toast. Hiding the delete
-   button removes the temptation, not the capability — the API rejects the call regardless. Because
+   returning 403, which the calling view catches and reports. Hiding the delete button removes the
+   temptation, not the capability — the API rejects the call regardless. Because
    it runs in `mounted`, a denied element also exists for one frame before it is replaced by a
    comment anchor.
 2. _It is not reactive._ The directive is evaluated once on mount and never re-runs on reactive
@@ -94,9 +109,9 @@ fresh clone has no mock backend without it.
   logout, or when a request returns 401 — which the response interceptor turns into a logout and a
   redirect to `/login` with the current path as `redirect`. Real expiry, refresh rotation and
   server-side revocation are out of scope.
-- **Boot revalidation fails silently by design.** `me()` is marked `handledLocally`, so a transport
-  or server failure surfaces nothing and the session continues from the persisted data. Only a 401
-  ends it — that branch runs before the opt-out, logging you out with a session-expired toast.
+- **Boot revalidation fails silently by design.** Its caller chooses to display nothing, so a
+  transport or server failure surfaces no message and the session continues from the persisted
+  data. Only a 401 ends it, logging you out with a session-expired toast from the interceptor.
 - **`active` is stored but not enforced.** An account marked inactive can still sign in; the flag
   exists to exercise the dynamic form's checkbox field type.
 

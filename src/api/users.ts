@@ -19,22 +19,21 @@ function toRequestParams(query: UsersQuery): UsersRequestParams {
 export async function list(query: UsersQuery, signal?: AbortSignal): Promise<Paginated<User>> {
   const { data } = await client.get<Paginated<User>>('/users', {
     params: toRequestParams(query),
-    handledLocally: true,
     signal,
   })
   return data
 }
 
 export async function get(id: number): Promise<User> {
-  const { data } = await client.get<User>(`/users/${id}`, { handledLocally: true })
+  const { data } = await client.get<User>(`/users/${id}`)
   return data
 }
 
 export async function update(id: number, patch: UserUpdate): Promise<User> {
-  const { data } = await client.patch<User>(`/users/${id}`, patch, { handledLocally: true })
+  const { data } = await client.patch<User>(`/users/${id}`, patch)
   return data
 }
 
 export async function remove(id: number): Promise<void> {
-  await client.delete<void>(`/users/${id}`, { handledLocally: true })
+  await client.delete<void>(`/users/${id}`)
 }

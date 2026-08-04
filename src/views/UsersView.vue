@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { apiErrorMessage } from '../api/errors'
+import { apiErrorMessage, isReportedError } from '../api/errors'
 import * as usersApi from '../api/users'
 import BaseButton from '../components/base/BaseButton.vue'
 import BaseInput from '../components/base/BaseInput.vue'
@@ -114,7 +114,9 @@ async function handleDelete(user: User): Promise<void> {
 
     await refresh()
   } catch (cause) {
-    notifications.notify('error', apiErrorMessage(cause))
+    if (!isReportedError(cause)) {
+      notifications.notify('error', apiErrorMessage(cause))
+    }
   } finally {
     deletingId.value = null
   }
