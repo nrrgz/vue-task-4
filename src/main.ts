@@ -5,6 +5,7 @@ import App from './App.vue'
 import { setAuthTokenGetter, setUnauthorizedHandler } from './api/client'
 import { can } from './directives/can'
 import { router } from './router'
+import { watchAccess } from './router/guards'
 import { useAuthStore } from './stores/auth'
 
 async function startMockBackend(): Promise<void> {
@@ -37,6 +38,7 @@ async function bootstrap(): Promise<void> {
 
   const auth = useAuthStore()
   auth.hydrate()
+  watchAccess(router)
 
   app.directive('can', can)
   app.use(router)
