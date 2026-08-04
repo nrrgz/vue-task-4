@@ -9,6 +9,6 @@ export async function login(credentials: Credentials): Promise<AuthResponse> {
 }
 
 export async function me(): Promise<AuthUser> {
-  const { data } = await client.get<AuthUser>('/auth/me')
+  const { data } = await client.get<AuthUser>('/auth/me', { handledLocally: true })
   return data
 }
