@@ -7,7 +7,7 @@ export function registerGuards(router: Router): void {
     const auth = useAuthStore()
 
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
-      return to.name === 'login' ? true : { name: 'login', query: { redirect: to.fullPath } }
+      return { name: 'login', query: { redirect: to.fullPath } }
     }
 
     if (to.name === 'login' && auth.isAuthenticated) {
@@ -15,7 +15,7 @@ export function registerGuards(router: Router): void {
     }
 
     if (!canAccess(to.meta, auth.role)) {
-      return to.name === 'forbidden' ? true : { name: 'forbidden' }
+      return { name: 'forbidden' }
     }
 
     return true

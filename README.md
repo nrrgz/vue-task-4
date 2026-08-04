@@ -53,6 +53,10 @@ render. The two never mix — no role check inside a button, no permission check
 coarse and stable, permission is fine-grained, and a role gaining a permission should not require
 touching a route.
 
+The guard needs no redirect-loop protection of its own: `/login` and `/403` carry no `meta`, so
+neither the `requiresAuth` check nor the role check can match them and redirect them to themselves.
+The route table is what makes the loop unreachable.
+
 **`v-can` has two caveats, both deliberate.**
 
 1. _It is cosmetic._ The directive only hides a control. Real authorization is the backend
