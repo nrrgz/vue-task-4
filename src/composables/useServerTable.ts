@@ -7,7 +7,7 @@ import { USERS_QUERY_KEYS as PARAM } from '../types/user'
 import type { SortOrder } from '../types/api'
 import type { Role, User, UserSortField, UsersQuery } from '../types/user'
 
-export const DEFAULT_PAGE_SIZE = 10
+const DEFAULT_PAGE_SIZE = 10
 export const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 const SEARCH_DEBOUNCE_MS = 350

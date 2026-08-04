@@ -16,7 +16,7 @@ export const useNotificationStore = defineStore('notifications', () => {
   const toasts = ref<Toast[]>([])
   const timers = new Map<string, ReturnType<typeof setTimeout>>()
 
-  function dismiss(id: string) {
+  function dismiss(id: string): void {
     const timer = timers.get(id)
     if (timer !== undefined) {
       clearTimeout(timer)
