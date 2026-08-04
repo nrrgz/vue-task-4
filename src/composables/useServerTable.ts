@@ -164,8 +164,14 @@ export function useServerTable() {
 
   const searchInput = ref(state.value.search)
   let searchTimer: ReturnType<typeof setTimeout> | undefined
+  let syncingFromUrl = false
 
   watch(searchInput, (value) => {
+    if (syncingFromUrl) {
+      syncingFromUrl = false
+      return
+    }
+
     clearTimeout(searchTimer)
     searchTimer = setTimeout(() => {
       void navigate({ search: value.trim(), page: 1 }, 'replace')
@@ -175,7 +181,11 @@ export function useServerTable() {
   watch(
     () => state.value.search,
     (value) => {
-      if (value !== searchInput.value.trim()) searchInput.value = value
+      if (value === searchInput.value.trim()) return
+
+      clearTimeout(searchTimer)
+      syncingFromUrl = true
+      searchInput.value = value
     },
   )
 
