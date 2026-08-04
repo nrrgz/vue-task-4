@@ -80,11 +80,12 @@ is one message plus one piece of page state, not two messages.
    temptation, not the capability — the API rejects the call regardless. Because
    it runs in `mounted`, a denied element also exists for one frame before it is replaced by a
    comment anchor.
-2. _It is not reactive._ The directive is evaluated once on mount and never re-runs on reactive
-   change, so a permission lost in-app — an admin demoting themselves through the edit form, which
-   `auth.refresh()` applies live — leaves already-mounted controls in the DOM until the next
-   navigation remounts them. The backend rejects those calls with a 403 regardless, so this is a
-   UI-integrity limitation, not a security hole.
+2. _It is not reactive._ The directive is evaluated on mount and never re-runs when permissions
+   change afterwards. No stale control actually survives here: the only in-app permission change is
+   an admin demoting themselves through the edit form, and the role change that comes with it makes
+   `watchAccess` re-evaluate access and navigate them off the route, which remounts. The one window
+   this design leaves open is a permission change that does not also alter the role — which no flow
+   in this app can produce.
 
 **The URL is the single source of truth for table state.** Page, size, sort, order, search and role
 filter live in `route.query`; UI actions push a new query and a watcher fetches from it. No
@@ -97,8 +98,10 @@ it was fixed at the source in Task 3 and re-copied, so this project's components
 unedited. `src/components/base` is in `.prettierignore` for the same reason.
 
 **Known tradeoffs.** Mock data is in-memory, so edits and deletes reset on reload; the seed is
-deterministic. Deleting the account you are signed in as is rejected with a 409, since otherwise
-the token stops resolving to a user and the next request logs you out mid-session. The mock token is base64, not stored server-side, so it still resolves after the
+deterministic. Deleting the account you are signed in as is rejected with a 409, but the UI already
+disables that button, so the check is backend defence-in-depth rather than a flow you can reach —
+without it the token would stop resolving to a user and the next request would log you out
+mid-session. The mock token is base64, not stored server-side, so it still resolves after the
 service worker restarts — otherwise every refresh would log you out.
 `public/mockServiceWorker.js` is generated (`npx msw init public/ --save`) but committed, since a
 fresh clone has no mock backend without it.
@@ -117,14 +120,18 @@ fresh clone has no mock backend without it.
 
 ## Definition of done
 
-- [x] Admin login → every page reachable, delete buttons visible
-- [x] Regular user → typing `/users` manually → redirected to `/403`; no delete buttons anywhere
-- [x] Logged out → open `/dashboard` → sent to `/login` → after login, returned to `/dashboard`
-- [x] F5 refresh keeps the session
-- [x] Clicking a table column header fires the correct request (visible in the Network tab)
-- [x] No console warnings or errors anywhere
-- [x] `vue-tsc --noEmit` passes; `eslint .` passes
-- [x] README documents run steps, decisions, and known tradeoffs
+The criteria this project is built against. The last two are enforced by `npm run typecheck` and
+`npm run lint`; the rest are runtime checks to walk through against `npm run dev` with the browser
+console and Network tab open.
+
+- Admin login → every page reachable, delete buttons visible
+- Regular user → typing `/users` manually → redirected to `/403`; no delete buttons anywhere
+- Logged out → open `/dashboard` → sent to `/login` → after login, returned to `/dashboard`
+- F5 refresh keeps the session
+- Clicking a table column header fires the correct request (visible in the Network tab)
+- No console warnings or errors anywhere
+- `vue-tsc --noEmit` passes; `eslint .` passes
+- README documents run steps, decisions, and known tradeoffs
 
 ## Structure
 
