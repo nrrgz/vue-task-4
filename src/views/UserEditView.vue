@@ -26,7 +26,7 @@ const notifications = useNotificationStore()
 
 const fields: FieldConfig<UserForm>[] = [
   { type: 'text', name: 'name', label: 'Name', required: true },
-  { type: 'text', name: 'email', label: 'Email', required: true },
+  { type: 'text', name: 'email', label: 'Email', required: true, inputType: 'email' },
   {
     type: 'select',
     name: 'role',

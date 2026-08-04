@@ -11,6 +11,7 @@ const model = defineModel<string>({ default: '' })
 const { errors, disabled } = useFormContext()
 
 const error = computed(() => errors.value[props.field.name] ?? '')
+const inputType = computed(() => props.field.inputType ?? 'text')
 </script>
 
 <template>
@@ -21,7 +22,7 @@ const error = computed(() => errors.value[props.field.name] ?? '')
         v-model="model"
         class="text-field__input"
         :class="{ 'has-error': invalid }"
-        type="text"
+        :type="inputType"
         :required="field.required"
         :disabled="disabled"
         :aria-describedby="describedBy"

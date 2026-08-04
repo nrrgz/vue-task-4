@@ -7,6 +7,8 @@ export interface FieldOption {
 
 export type FieldValue = string | boolean
 
+export type TextInputType = 'text' | 'email' | 'password' | 'tel' | 'url'
+
 export type FormModel = Record<string, FieldValue>
 
 export interface FieldConfig<T extends FormModel = FormModel> {
@@ -14,5 +16,6 @@ export interface FieldConfig<T extends FormModel = FormModel> {
   name: Extract<keyof T, string>
   label: string
   required?: boolean
+  inputType?: TextInputType
   options?: FieldOption[]
 }
