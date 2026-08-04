@@ -90,7 +90,7 @@ async function handleSubmit(): Promise<void> {
     initial.value = toModel(updated)
 
     if (auth.user?.id === updated.id) {
-      await auth.refresh()
+      await auth.refresh().catch(() => undefined)
     }
 
     notifications.notify('success', `Saved ${updated.name}`)
