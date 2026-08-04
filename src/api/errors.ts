@@ -7,8 +7,8 @@ declare module 'axios' {
   }
 }
 
-export const GENERIC_ERROR = 'Something went wrong. Please try again.'
-export const NETWORK_ERROR = 'Cannot reach the server. Check your connection and try again.'
+const GENERIC_ERROR = 'Something went wrong. Please try again.'
+const NETWORK_ERROR = 'Cannot reach the server. Check your connection and try again.'
 export const FORBIDDEN_ERROR = 'You do not have permission to do that.'
 export const SESSION_ERROR = 'Your session has expired. Please sign in again.'
 

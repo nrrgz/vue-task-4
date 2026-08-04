@@ -63,8 +63,6 @@ function validate(): boolean {
 function handleSubmit(): void {
   if (validate()) emit('submit')
 }
-
-defineExpose({ validate })
 </script>
 
 <template>
