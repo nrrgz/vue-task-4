@@ -51,4 +51,13 @@ async function bootstrap(): Promise<void> {
   }
 }
 
+function reloadOnBackForwardCacheRestore(): void {
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      window.location.reload()
+    }
+  })
+}
+
+reloadOnBackForwardCacheRestore()
 void bootstrap()
